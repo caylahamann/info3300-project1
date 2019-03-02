@@ -11,8 +11,10 @@
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://d3js.org/topojson.v2.min.js"></script>
   <script src = 'districts.js'></script>
+  <script src = 'bins.js'></script>
 </head>
 <body>
+    <h1>Info 3300 Project 1 - Recycling Retention Rates in NYC</h1>
 </body>
 
 
@@ -44,6 +46,20 @@ g.selectAll('path')
   .attr('fill', '#ccc')
   .attr('d', geoPath);
 
+var bins = svg.append('g');
+
+bins.selectAll('path')
+  .data(bins_json.features)
+  .enter()
+  .append('path')
+  .attr('fill', 'black')
+  .attr('d', geoPath);
 
 </script>
+<style>
+h1 {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    padding-left: 50px;
+}
+</style>
 </html>
