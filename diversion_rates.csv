@@ -1,4 +1,4 @@
-﻿Zone,District,Fiscal Month Number,Fiscal Year,Month Name,Diversion Rate-Total (Total Recycling / Total Waste),Capture Rate-Paper (Total Paper / Max Paper),Capture Rate-MGP (Total MGP / Max MGP),capture_rate
+﻿Zone,District,Fiscal Month Number,Fiscal Year,Month Name,diversion_rate,Capture Rate-Paper (Total Paper / Max Paper),Capture Rate-MGP (Total MGP / Max MGP),capture_rate
 Brooklyn North,BKN01,9,2005,March,67.52908329,43.30269667,42.00716273,569.048853
 Brooklyn North,BKN01,10,2005,April,68.89274265,36.51210564,41.53274396,609.3073473
 Brooklyn North,BKN01,11,2005,May,71.52948117,39.70934351,42.720412,685.2369673

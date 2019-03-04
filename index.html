@@ -94,7 +94,7 @@
           .domain([0,100])
           .range(["blue","red"]);
       
-        let colorGreen = d3.scaleSequential(d3.interpolateGreens).domain([35,100]);
+        let colorGreen = d3.scaleSequential(d3.interpolateViridis).domain([100,30]);
       
         var albersProjection = d3.geoAlbers()
           .scale(90000)
@@ -169,13 +169,15 @@ d3.csv('diversion_rates.csv').then( function(data){
 
     var dict = {}; 
     var dict_avg = {} 
+    console.log(data);
 
     data.forEach( (d, i) => {
         var zone = d['Zone']; 
         var district = d['District'];
         var year = d['Fiscal Year']; 
         var month = d['Fiscal Month Number']; 
-        var capture = Number(d['capture_rate']); 
+        var capture = Number(d['diversion_rate']); 
+        console.log(capture)
         var date = new Date(year,month);
 
         if (!(zone in dict)) {
@@ -212,17 +214,17 @@ d3.csv('diversion_rates.csv').then( function(data){
 
     console.log(dict_avg); 
 
-    const max_capture = d3.max(data, (d)=>d.capture_rate);
-    const min_capture = d3.min(data, (d)=>d.capture_rate);
+    const max_capture = d3.max(data, (d)=>d['diversion_rate']);
+    const min_capture = d3.min(data, (d)=>d['diversion_rate']);
     
     const max_time = new Date(2019,4); 
     const min_time = new Date(2005,1);
 
     //creating scales 
     var xScale = d3.scaleTime().domain([min_time,max_time]).range([0, width]); 
-    var yScale = d3.scaleLinear().domain([200,max_capture]).range([height,0]); 
+    var yScale = d3.scaleLinear().domain([40,max_capture]).range([height,0]); 
 
-    var colorScale = d3.scaleSequential(d3.interpolatePRGn).domain([0,6]); 
+    var colorScale = d3.scaleSequential(d3.interpolateViridis).domain([0,6]); 
 
     var line = d3.line()
                 .x(function(d,i) {return xScale(d[0])})
@@ -256,6 +258,24 @@ d3.csv('diversion_rates.csv').then( function(data){
             .style('stroke', 'black')
             .style('fill', 'black');
         
+        svg.append('text')
+            .attr('class', 'axis-labels')
+            .attr('transform','translate('+ (width/2) + ',' + (height+30) + ')')
+            .attr('text-anchor', 'middle')
+            .attr('color', 'black')
+            .style('font-size', '10px')
+            .text('Year'); 
+        
+        svg.append('text')
+            .attr('class', 'axis-labels')
+            .attr('x', -75)
+            .attr('y', -30)
+            .attr('text-anchor', 'middle')
+            .attr('color', 'black')
+            .style('font-size', '8px')
+            .text('Diversion Rate (Total Recycling / Total Waste)')
+            .attr('transform', 'rotate(270)'); 
+        
         Object.values(element).forEach((el,index)=> {
             var data_array = []; 
             Object.keys(el).forEach((k) => {
@@ -267,21 +287,63 @@ d3.csv('diversion_rates.csv').then( function(data){
                 .data([data_array])
                 .attr('class', 'line')
                 .attr('d', line)
-                .style('stroke', function(d){return colorScale(index)});
+                .style('stroke', 'lightgrey');
 
         });
 
     }); 
 
-    d3.select('body').append('div'); 
-    var new_svg = d3.select("body").append("svg")
-                .attr("width", 1200 )
-                .attr("height", 500)
+    var svg_key = d3.select("body").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform","translate(" + margin.left + "," + margin.top + ")");
     
-    var xScaleLarge = d3.scaleTime().domain([min_time,max_time]).range([0, 1200]); 
-    var yScaleLarge = d3.scaleLinear().domain([400,800]).range([500,0]); 
+    svg_key.append('text')
+            .attr('x', width/2)
+            .attr('y', 0)
+            .attr('class', 'title-key')
+            .text('Line Graph Key')
+            .attr('text-anchor', 'middle')
+    
+    svg_key.append('path')
+            .attr('d', 'M 25 50 H 100')
+            .attr('stroke', 'lightgrey')
+            .attr('stroke-width', '1px');
+    
+    svg_key.append('text')
+            .attr('class', 'label')
+            .text('Districts')
+            .attr('x', width/2)
+            .attr('y', 55);
+
+    svg_key.append('text')
+            .attr('class', 'label')
+            .text('Average/Zone')
+            .attr('x', width/2)
+            .attr('y', 30 + height/2);
+            
+
+    d3.select('body').append('div'); 
+
+    var margin = {top:20, right: 20, bottom:30, left: 50}, 
+        width  = 1200 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var colorKey = d3.select('body').append('svg')
+                 .attr('width', width+100)
+                 .attr('height', 100)
+                 .style('border-color', 'lightgrey')
+                 .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+
+    var new_svg = d3.select("body").append("svg")
+                .attr("width", width )
+                .attr("height", height)
+                .append("g")
+                .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+    
+    var xScaleLarge = d3.scaleTime().domain([min_time,max_time]).range([0, width]); 
+    var yScaleLarge = d3.scaleLinear().domain([50,max_capture]).range([height,0]); 
     
 
     var lineLarge = d3.line()
@@ -291,7 +353,7 @@ d3.csv('diversion_rates.csv').then( function(data){
     
     new_svg.append('g')
             .attr('class', 'x axis')
-            .attr('transform', 'translate(0,'+ 460+')')
+            .attr('transform', 'translate(0,'+ (height-60)+')')
             .call(d3.axisBottom(xScaleLarge));
     
     new_svg.append('g')
@@ -301,16 +363,29 @@ d3.csv('diversion_rates.csv').then( function(data){
     new_svg.append('text')
             .attr('class','title')
             .text('Average by Zone')
-            .attr("transform","translate(" + (1200)/2 + ",20)")
+            .attr("transform","translate(" + (width)/2 + ",20)")
             .attr('text-anchor', 'middle')
             .style('font-size', '30px');
     
+    new_svg.append('text')
+            .attr('class', 'axis-labels')
+            .attr('transform','translate('+ (width/2) + ',' + (height-20) + ')')
+            .attr('text-anchor', 'middle')
+            .attr('color', 'black')
+            .style('font-size', '13px')
+            .text('Year');
     
-    var colorKey = d3.select('body').append('svg')
-                 .attr('width', 1200)
-                 .attr('height', 100)
-                 .style('border-color', 'lightgrey')
-                 .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+    new_svg.append('text')
+            .attr('class', 'axis-labels')
+            .attr('x', -height/2)
+            .attr('y', -30)
+            .attr('text-anchor', 'middle')
+            .attr('color', 'black')
+            .style('font-size', '13px')
+            .text('Diversion Rate (Total Recycling / Total Waste)')
+            .attr('transform', 'rotate(270)'); 
+    
+     
     
     Object.values(dict_avg).forEach((element,index)=> {
         data_array = []; 
@@ -321,13 +396,20 @@ d3.csv('diversion_rates.csv').then( function(data){
         })
         var name = Object.keys(dict_avg)[index]; 
 
-        // var old_svg = d3.select('#svg-'+index)
-        //                 .data([data_array])
-        //                 .attr('class', 'line')
-        //                 .attr('d', line)
-        //                 .style('stroke', 'black')
-        //                 .style('stroke-width', '1');
-
+        var old_svg = d3.select('#svg-'+index)
+                        .append('path')
+                        .data([data_array])
+                        .attr('class', 'line')
+                        .attr('d', line)
+                        .style('stroke', function(d){return colorScale(index)})
+                        .style('stroke-width', '3')
+                        .attr("transform","translate(" + margin.left + "," + margin.top + ")");;
+        
+        svg_key.append('path')
+            .attr('d', 'M 25 ' + ((index+2)*10 + 50) + ' H 100')
+            .attr('stroke', function(d){return colorScale(index)})
+            .attr('stroke-width', '3px');
+        
         new_svg.append('path')
                 .data([data_array])
                 .attr('class', 'line')
@@ -380,9 +462,19 @@ h1, .title {
 
 }
 
-.colorkey {
+.colorkey, .label, .axis-labels {
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; 
 }
+
+.label {
+    font-size: 13px;
+}
+
+.title-key {
+    font-weight: bold;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; 
+}
+
 
 </style>
 </html>
