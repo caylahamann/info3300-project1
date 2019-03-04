@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Info 3300 Project 1 - Recycling Retention Rates in NYC</title>
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/styles/default.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/highlight.min.js"></script>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://d3js.org/topojson.v2.min.js"></script>
+  <script src = 'districts.js'></script>
+  <script src = 'bins.js'></script>
+  <style>
+    .districts {
+      stroke: black;
+      stroke-width: 1px;
+    }
+    .Bronx {
+      fill: #ccc;
+      fill-opacity: 0.8;
+      /* stroke: aquamarine; */
+      stroke: black;
+      stroke-width: 1px;
+    }
+    .StatenIsland {
+      fill: #ccc;
+      fill-opacity: 0.8;
+      /* stroke: lime; */
+      stroke: black;
+      stroke-width: 1px;
+    }
+    .Manhattan {
+      fill: #ccc;
+      fill-opacity: 0.8;
+      /* stroke: indianred; */
+      stroke: black;
+      stroke-width: 1px;
+    }
+    .QueensEast {
+      fill: #ccc;
+      fill-opacity: 0.8;
+      /* stroke: plum; */
+      stroke: black;
+      stroke-width: 1px;
+    }
+    .QueensWest {
+      fill: #ccc;
+      fill-opacity: 0.8;
+      /* stroke: gold; */
+      stroke: black;
+      stroke-width: 1px;
+    }
+    .BrooklynNorth {
+      fill: #ccc;
+      fill-opacity: 0.8;
+      /* stroke: peru; */
+      stroke: black;
+      stroke-width: 1px;
+    }
+    .BrooklynSouth {
+      fill: #ccc;
+      fill-opacity: 0.8;
+      /* stroke: deepskyblue; */
+      stroke: black;
+      stroke-width: 1px;
+    }
+  </style>
+</head>
+<body>
+    <h1>Info 3300 Project 1 - Recycling Retention Rates in NYC</h1>
+</body>
+
+
+<script id="script-1">
+
+  var width = 800,
+      height = 800;
+
+  var svg = d3.select('body')
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+  var g = svg.append('g');
+
+  let retenionScale = d3.scaleLinear()
+    .domain([0,100])
+    .range([0,1]);
+
+  let color = d3.scaleQuantize()
+    .domain([0,100])
+    .range(["blue","red"]);
+
+  let colorGreen = d3.scaleSequential(d3.interpolateGreens).domain([35,100]);
+
+  var albersProjection = d3.geoAlbers()
+    .scale(90000)
+    .rotate([74.0060, 0])
+    .center([0, 40.7128])
+    .translate([width/2, height/2]);
+
+  var geoPath = d3.geoPath()
+      .projection(albersProjection);
+
+  g.selectAll('path')
+    .data(districts_json.features)
+    .enter()
+    .append('path')
+    .attr("class","districts")
+    .attr("id",d => d.properties.district)
+    .attr("class",d => d.properties.borough)
+    //.attr('fill', '#ccc')
+    //.attr("fill", d => d.properties.borough)
+    .attr('d', geoPath);
+
+  var bins = svg.append('g');
+  console.log(bins_json.features[1].geometry.coordinates);
+  console.log(bins_json.features.length);
+  console.log(districts_json.features[1].properties.district);
+  // bins.selectAll('path')
+  //   .data(bins_json.features)
+  //   .enter()
+  //   .append('path')
+  //   .attr('fill', 'black')
+  //   .attr('d', geoPath);
+  bins.selectAll('circles')
+    .data(bins_json.features)
+    .enter()
+    .append('circle')
+    .attr("r",2)
+    .attr('fill', 'black')
+    .attr('cx', d => albersProjection(d.geometry.coordinates)[0])
+    .attr('cy', d => albersProjection(d.geometry.coordinates)[1]);
+
+
+
+  bins.exit();
+  bins.selectAll('circles').each(function(dat){
+    // dat.attr('fill','green');
+    console.log(d3.select(this));
+    d3.select(this).style("fill","green");
+  });
+  d3.json("https://data.cityofnewyork.us/api/views/gaq9-z3hz/rows.json?accessType=DOWNLOAD")
+    .then(function(data){
+      //Borough = 8 (apply the replace(/[ ]/g,"") to the result) District = 9, year = 11, month = 12, waste diversion = 13, capture rate paper = 14
+      // console.log(data.data[2][8].replace(/[ ]/g,""));
+      retentionData = data.data;
+      retentionData.forEach(function(dat){
+        //d3.select("path#"+dat[9]).style("fill-opacity",""+retenionScale(dat[13]));
+        d3.select("path#"+dat[9]).style("fill",""+colorGreen(dat[13]));
+      })
+  });
+
+
+</script>
+<style>
+h1 {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    padding-left: 50px;
+}
+</style>
+</html>

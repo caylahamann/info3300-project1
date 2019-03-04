@@ -7,59 +7,371 @@
     <title>Info 3300 Project 1 - Recycling Retention Rates in NYC</title>
 
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/styles/default.min.css">
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/highlight.min.js"></script>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-  <script src="https://d3js.org/topojson.v2.min.js"></script>
-  <script src = 'districts.js'></script>
-  <script src = 'bins.js'></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/highlight.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/topojson.v2.min.js"></script>
+    <script src = 'districts.js'></script>
+    <script src = 'bins.js'></script>
+    <style>
+      .districts {
+        stroke: black;
+        stroke-width: 1px;
+      }
+      .Bronx {
+        fill: #ccc;
+        fill-opacity: 0.8;
+        /* stroke: aquamarine; */
+        stroke: black;
+        stroke-width: 1px;
+      }
+      .StatenIsland {
+        fill: #ccc;
+        fill-opacity: 0.8;
+        /* stroke: lime; */
+        stroke: black;
+        stroke-width: 1px;
+      }
+      .Manhattan {
+        fill: #ccc;
+        fill-opacity: 0.8;
+        /* stroke: indianred; */
+        stroke: black;
+        stroke-width: 1px;
+      }
+      .QueensEast {
+        fill: #ccc;
+        fill-opacity: 0.8;
+        /* stroke: plum; */
+        stroke: black;
+        stroke-width: 1px;
+      }
+      .QueensWest {
+        fill: #ccc;
+        fill-opacity: 0.8;
+        /* stroke: gold; */
+        stroke: black;
+        stroke-width: 1px;
+      }
+      .BrooklynNorth {
+        fill: #ccc;
+        fill-opacity: 0.8;
+        /* stroke: peru; */
+        stroke: black;
+        stroke-width: 1px;
+      }
+      .BrooklynSouth {
+        fill: #ccc;
+        fill-opacity: 0.8;
+        /* stroke: deepskyblue; */
+        stroke: black;
+        stroke-width: 1px;
+      }
+    </style>
 </head>
+
 <body>
     <h1>Info 3300 Project 1 - Recycling Retention Rates in NYC</h1>
-</body>
 
+</body>
 
 <script id="script-1">
 
-var width = 800,
-    height = 800;
+        var width = 800,
+            height = 800;
+      
+        var svg = d3.select('body')
+          .append('svg')
+          .attr('width', width)
+          .attr('height', height);
+      
+        var g = svg.append('g');
+      
+        let retenionScale = d3.scaleLinear()
+          .domain([0,100])
+          .range([0,1]);
+      
+        let color = d3.scaleQuantize()
+          .domain([0,100])
+          .range(["blue","red"]);
+      
+        let colorGreen = d3.scaleSequential(d3.interpolateGreens).domain([35,100]);
+      
+        var albersProjection = d3.geoAlbers()
+          .scale(90000)
+          .rotate([74.0060, 0])
+          .center([0, 40.7128])
+          .translate([width/2, height/2]);
+      
+        var geoPath = d3.geoPath()
+            .projection(albersProjection);
+      
+        g.selectAll('path')
+          .data(districts_json.features)
+          .enter()
+          .append('path')
+          .attr("class","districts")
+          .attr("id",d => d.properties.district)
+          .attr("class",d => d.properties.borough)
+          //.attr('fill', '#ccc')
+          //.attr("fill", d => d.properties.borough)
+          .attr('d', geoPath);
+      
+        var bins = svg.append('g');
+        console.log(bins_json.features[1].geometry.coordinates);
+        console.log(bins_json.features.length);
+        console.log(districts_json.features[1].properties.district);
+        // bins.selectAll('path')
+        //   .data(bins_json.features)
+        //   .enter()
+        //   .append('path')
+        //   .attr('fill', 'black')
+        //   .attr('d', geoPath);
+        bins.selectAll('circles')
+          .data(bins_json.features)
+          .enter()
+          .append('circle')
+          .attr("r",2)
+          .attr('fill', 'black')
+          .attr('cx', d => albersProjection(d.geometry.coordinates)[0])
+          .attr('cy', d => albersProjection(d.geometry.coordinates)[1]);
+      
+      
+      
+        bins.exit();
+        bins.selectAll('circles').each(function(dat){
+          // dat.attr('fill','green');
+          console.log(d3.select(this));
+          d3.select(this).style("fill","green");
+        });
+        d3.json("https://data.cityofnewyork.us/api/views/gaq9-z3hz/rows.json?accessType=DOWNLOAD")
+          .then(function(data){
+            //Borough = 8 (apply the replace(/[ ]/g,"") to the result) District = 9, year = 11, month = 12, waste diversion = 13, capture rate paper = 14
+            // console.log(data.data[2][8].replace(/[ ]/g,""));
+            retentionData = data.data;
+            retentionData.forEach(function(dat){
+              //d3.select("path#"+dat[9]).style("fill-opacity",""+retenionScale(dat[13]));
+              d3.select("path#"+dat[9]).style("fill",""+colorGreen(dat[13]));
+            })
+        });
+      
+</script>
 
-var svg = d3.select('body')
-  .append('svg')
-  .attr('width', width)
-  .attr('height', height);
+<script>
 
-var g = svg.append('g');
+d3.select('body').append('div'); 
 
-var albersProjection = d3.geoAlbers()
-  .scale(90000)
-  .rotate([74.0060, 0])
-  .center([0, 40.7128])
-  .translate([width/2, height/2]);
+d3.csv('diversion_rates.csv').then( function(data){
 
-var geoPath = d3.geoPath()
-    .projection(albersProjection);
+    var margin = {top:20, right: 20, bottom:30, left: 50}, 
+        width = width = 300 - margin.left - margin.right,
+        height = 200 - margin.top - margin.bottom;
 
-g.selectAll('path')
-  .data(districts_json.features)
-  .enter()
-  .append('path')
-  .attr('fill', '#ccc')
-  .attr('d', geoPath);
+    var dict = {}; 
+    var dict_avg = {} 
 
-var bins = svg.append('g');
+    data.forEach( (d, i) => {
+        var zone = d['Zone']; 
+        var district = d['District'];
+        var year = d['Fiscal Year']; 
+        var month = d['Fiscal Month Number']; 
+        var capture = Number(d['capture_rate']); 
+        var date = new Date(year,month);
 
-bins.selectAll('path')
-  .data(bins_json.features)
-  .enter()
-  .append('path')
-  .attr('fill', 'black')
-  .attr('d', geoPath);
+        if (!(zone in dict)) {
+            dict[zone] = {};
+            dict[zone][district] = {}; 
+            dict[zone][district][year] = [capture]; 
+            
+            //average dictionary
+            dict_avg[zone] = {}; 
+            dict_avg[zone][year] = {}; 
+            dict_avg[zone][year] = [capture]; 
+
+        } else {
+            if (!(district in dict[zone])) {
+                dict[zone][district] = {}; 
+                dict[zone][district][year] = [capture]; 
+            } else {
+                if(!(year in dict[zone][district])){
+                    dict[zone][district][year] = [capture]; 
+                }
+                else {
+                    dict[zone][district][year].push(capture); 
+                }
+            }
+
+            if (!(year in dict_avg[zone])){
+                dict_avg[zone][year] = [capture]; 
+            }
+            else {
+                dict_avg[zone][year].push(capture); 
+            }
+        }
+    } )
+
+    console.log(dict_avg); 
+
+    const max_capture = d3.max(data, (d)=>d.capture_rate);
+    const min_capture = d3.min(data, (d)=>d.capture_rate);
+    
+    const max_time = new Date(2019,4); 
+    const min_time = new Date(2005,1);
+
+    //creating scales 
+    var xScale = d3.scaleTime().domain([min_time,max_time]).range([0, width]); 
+    var yScale = d3.scaleLinear().domain([200,max_capture]).range([height,0]); 
+
+    var colorScale = d3.scaleLinear().domain([1,12]).range(['#005b1d','#b5b9ff']).interpolate(d3.interpolateHcl); 
+
+    var line = d3.line()
+                .x(function(d,i) {return xScale(d[0])})
+                .y(function(d,i) {return yScale(d[1])})
+                .curve(d3.curveMonotoneX);;
+    
+
+    Object.values(dict).forEach((element,index)=>{
+        var svg = d3.select("body").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+        
+        
+        svg.append('g')
+            .attr('class', 'x axis')
+            .attr('transform', 'translate(0,'+ height+')')
+            .call(d3.axisBottom(xScale));
+    
+        svg.append('g')
+            .attr('class', 'x axis')
+            .call(d3.axisLeft(yScale));
+
+        svg.append('text')
+            .attr('class','title')
+            .text(Object.keys(dict)[index])
+            .attr("transform","translate(" + (width)/2 + ",0)")
+            .attr('text-anchor', 'middle');
+        
+        Object.values(element).forEach((el,index)=> {
+            var data_array = []; 
+            Object.keys(el).forEach((k) => {
+                var date_obj = new Date(k); 
+                data_array.push([date_obj,arrAvg(el[k])]); 
+            }); 
+            
+            svg.append('path')
+                .data([data_array])
+                .attr('class', 'line')
+                .attr('d', line)
+                .style('stroke', function(d){return colorScale(index)});
+
+        });
+
+    }); 
+
+    d3.select('body').append('div'); 
+    var new_svg = d3.select("body").append("svg")
+                .attr("width", 900 )
+                .attr("height", 500)
+                .append("g")
+                .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+    
+    var xScaleLarge = d3.scaleTime().domain([min_time,max_time]).range([0, 900]); 
+    var yScaleLarge = d3.scaleLinear().domain([200,max_capture]).range([500,0]); 
+    
+
+    var lineLarge = d3.line()
+                .x(function(d,i) {return xScaleLarge(d[0])})
+                .y(function(d,i) {return yScaleLarge(d[1])})
+                .curve(d3.curveMonotoneX);;
+    
+    new_svg.append('g')
+            .attr('class', 'x axis')
+            .attr('transform', 'translate(0,'+ 460+')')
+            .call(d3.axisBottom(xScaleLarge));
+    
+    new_svg.append('g')
+            .attr('class', 'x axis')
+            .call(d3.axisLeft(yScaleLarge));
+
+    new_svg.append('text')
+            .attr('class','title')
+            .text('Average by Zone')
+            .attr("transform","translate(" + (900)/2 + ",40)")
+            .attr('text-anchor', 'middle')
+            .style('font-size', '30px');
+    
+    
+    var colorKey = d3.select('body').append('svg')
+                 .attr('width', 900)
+                 .attr('height', 100)
+                 .style('border-color', 'lightgrey')
+                 .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+    
+    Object.values(dict_avg).forEach((element,index)=> {
+        data_array = []; 
+        Object.keys(element).forEach((k)=> {
+            date_obj = new Date(k);  
+            data_array.push([date_obj, arrAvg(element[k])]); 
+            
+        })
+        var name = Object.keys(dict_avg)[index]; 
+
+        new_svg.append('path')
+                .data([data_array])
+                .attr('class', 'line')
+                .attr('d', lineLarge)
+                .style('stroke', function(d){return colorScale(index)})
+                .style('stroke-width', '5');
+        colorKey.append('circle')
+                .attr('cx',10+(130*index))
+                .attr('cy', 100/2)
+                .attr('r', 10)
+                .attr('fill', colorScale(index))
+        colorKey.append('text')
+                .text(name)
+                .attr('class', 'colorkey')
+                .attr('x', 30+(130*index))
+                .attr('y', 108/2)
+                .style('font-size', '12px'); 
+    });
+
+    
+    
+})
+
+
+
+function arrAvg(arr) {
+    var sum = 0; 
+    for (var i = 0; i<arr.length; i++) {
+        if (!isNaN(arr[i])) {
+            sum = sum + arr[i]; 
+        }
+    }
+    return sum/arr.length; 
+}
 
 </script>
 <style>
-h1 {
+h1, .title {
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     padding-left: 50px;
 }
+
+.line {
+    stroke-width: 1.5; 
+    fill: none;
+}
+
+.title {
+    text-align: center;
+
+}
+
+.colorkey {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; 
+}
+
 </style>
 </html>
