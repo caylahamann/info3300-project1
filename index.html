@@ -70,7 +70,7 @@
 </head>
 
 <body>
-    <h1>Info 3300 Project 1 - Recycling Retention Rates in NYC</h1>
+    <h1>Info 3300 Project 1 - Recycling Diversion Rates in NYC</h1>
 
 </body>
 
@@ -327,11 +327,11 @@ d3.csv('diversion_rates.csv').then( function(data){
     d3.select('body').append('div'); 
 
     var margin = {top:20, right: 20, bottom:30, left: 50}, 
-        width  = 1200 - margin.left - margin.right,
+        width  = 900 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
     var colorKey = d3.select('body').append('svg')
-                 .attr('width', width+100)
+                 .attr('width', 1200+100)
                  .attr('height', 100)
                  .style('border-color', 'lightgrey')
                  .attr("transform","translate(" + margin.left + "," + margin.top + ")");
@@ -429,12 +429,49 @@ d3.csv('diversion_rates.csv').then( function(data){
                 .style('font-size', '12px'); 
     });
 
-    
-    
+    const BOROUGHS = ['BrookylnNorth', 'BrooklynSouth', 'Bronx', 'Manhattan', 'QueensEast', 'QueensWest', 'StatenIsland']; 
+///CREATE CHLOROPLETH MAP
+    var width = 500,
+        height = 500;
+
+          var svg = d3.select('body')
+          .append('svg')
+          .attr('width', width)
+          .attr('height', height);
+      
+        var g = svg.append('g');
+      
+        colorGreen = d3.scaleSequential(d3.interpolateViridis).domain([100,30]);
+      
+        var albersProjection = d3.geoAlbers()
+          .scale(45000)
+          .rotate([74.0060, 0])
+          .center([0, 40.7128])
+          .translate([width/2, height/2]);
+      
+        var geoPath = d3.geoPath()
+            .projection(albersProjection);
+      
+        g.selectAll('path')
+          .data(districts_json.features)
+          .enter()
+          .append('path')
+          .attr("class","districts")
+          .attr("id",d => {console.log(d.properties); return d.properties.district;})
+          .attr("class",d => d.properties.borough+'mini')
+          .attr('fill', d => colorScale(BOROUGHS.indexOf(d.properties.borough)))
+          //.attr("fill", d => d.properties.borough)
+          .attr('d', geoPath)
+          .style('stroke-width', 0.1); 
+      
+  
+      BOROUGHS.forEach((bor, index)=> {
+        d3.selectAll('.'+bor+'mini').style('fill', colorScale(index)); 
+      }); 
 })
 
 
-
+/////
 function arrAvg(arr) {
     var sum = 0; 
     for (var i = 0; i<arr.length; i++) {
