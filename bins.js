@@ -1,3 +1,5 @@
+/*Taken from https://data.cityofnewyork.us/Environment/Public-Recycling-Bins/sxx4-xhzg/data */
+
 var bins_json = {
     "type": "FeatureCollection",
     "features": [

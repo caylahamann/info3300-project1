@@ -76,74 +76,158 @@
 
 <script id="script-1">
 
-        var width = 800,
-            height = 800;
-      
+var width = 600,
+            height = 600;
+
         var svg = d3.select('body')
           .append('svg')
           .attr('width', width)
           .attr('height', height);
-      
+
         var g = svg.append('g');
-      
+
         let retenionScale = d3.scaleLinear()
           .domain([0,100])
           .range([0,1]);
-      
+
         let color = d3.scaleQuantize()
           .domain([0,100])
           .range(["blue","red"]);
-      
+
         let colorGreen = d3.scaleSequential(d3.interpolateViridis).domain([100,30]);
-      
+        let colorQuant = d3.scaleQuantize().domain([30,100])
+          .range([colorGreen(30),colorGreen(40),colorGreen(50),colorGreen(60),colorGreen(70),colorGreen(80),colorGreen(90),colorGreen(100)]);
+
+
         var albersProjection = d3.geoAlbers()
-          .scale(90000)
+          .scale(75000)
           .rotate([74.0060, 0])
           .center([0, 40.7128])
           .translate([width/2, height/2]);
-      
+
         var geoPath = d3.geoPath()
             .projection(albersProjection);
-      
+
         g.selectAll('path')
           .data(districts_json.features)
           .enter()
           .append('path')
           .attr("class","districts")
-          .attr("id",d => {console.log(d.properties); return d.properties.district;})
+          //.attr("id",d => {console.log(d.properties); return d.properties.district;})
+          .attr("id",d => {return d.properties.district;})
+          .attr("numID", (d,i) => "distict"+i)
           .attr("class",d => d.properties.borough)
-          //.attr('fill', '#ccc')
-          //.attr("fill", d => d.properties.borough)
           .attr('d', geoPath)
-          .style('stroke-width', 0.1); 
-      
+          .style('stroke-width', 0.4);
+
         var bins = svg.append('g');
         console.log(bins_json.features[1].geometry.coordinates);
         console.log(bins_json.features.length);
         console.log(districts_json.features[1].properties.district);
-        // bins.selectAll('path')
-        //   .data(bins_json.features)
-        //   .enter()
-        //   .append('path')
-        //   .attr('fill', 'black')
-        //   .attr('d', geoPath);
+        console.log(districts_json.features.length);
+
         bins.selectAll('circles')
           .data(bins_json.features)
           .enter()
           .append('circle')
           .attr("r",1.5)
+          .attr("id", (d,i) => "bin"+i)
           .attr('fill', 'black')
+          .attr("circdis", d => {})
           .attr('cx', d => albersProjection(d.geometry.coordinates)[0])
           .attr('cy', d => albersProjection(d.geometry.coordinates)[1]);
-      
-      
-      
         bins.exit();
-        bins.selectAll('circles').each(function(dat){
-          // dat.attr('fill','green');
-          console.log(d3.select(this));
-          d3.select(this).style("fill","green");
+
+        // LEGEND FOR THE Retention RATE
+        d3.simpleLegend = () => {
+          function legend(legend_) {
+            let dat = [1,2,3,4,5,6,7];
+            legend_.selectAll("rect").data(dat).enter()
+              .append("rect").attr("height",25).attr("width",25)
+              .attr("x",0).attr("y", d => d*25)
+              .style("fill",d=> ""+colorQuant(100-d*10));
+            legend_.selectAll("text").data(dat).enter()
+              .append("text").attr("x",30).attr("y", d => 17.5+d*25)
+              .text(d => ""+(100-(d)*10)+"-"+(100-(d-1)*10))
+              .attr('class', 'colorkey');
+            return this;
+          }
+          return legend;
+        }
+        let chloroLegend = d3.simpleLegend();
+        let legend = svg.append("g").attr("transform","translate(20,40)").call(chloroLegend)
+        legend.append("text").attr("x", 0).attr("y", 20).text("Diversion rate %").attr("class","title-key");
+        // ENDS HERE
+
+
+        // The start of the bins density graph
+        let densvg = d3.select('body')
+          .append('svg')
+          .attr('width', width)
+          .attr('height', height);
+
+        let densg = densvg.append('g');
+        densg.selectAll('path')
+          .data(districts_json.features)
+          .enter()
+          .append('path')
+          .attr("class","districts")
+          //.attr("id",d => {console.log(d.properties); return d.properties.district;})
+          .attr("id",d => {return "dens"+d.properties.district;})
+          .attr("numID", (d,i) => "distict"+i)
+          .attr("class",d => d.properties.borough)
+          .attr('d', geoPath)
+          .style('stroke-width', 0.4);
+
+
+
+        districtDensity = {};
+        maxDensity = 0;
+        coordinates = {};
+        //for (j = 1; j <= bins_json.features.length; j++){
+          //d3.select("circle#bin"+j).style("fill","red");
+        bins_json.features.forEach( function(d,i) {
+          coordinates[""+i] = bins_json.features[i].geometry.coordinates;
         });
+        districts_json.features.forEach( function(d) {
+          districtDensity[d.properties.district] = 0;
+          for (j = 1; j <= bins_json.features.length; j++){
+            if (d3.geoContains(d,coordinates[j-1])){
+              districtDensity[d.properties.district] = districtDensity[d.properties.district] + 1;
+            }
+            if (districtDensity[d.properties.district] > maxDensity){
+              maxDensity = districtDensity[d.properties.district];
+            }
+          }
+        });
+        // console.log(districtDensity);
+        let colorDensity = d3.scaleSequential(d3.interpolatePurples).domain([0,maxDensity]);
+        let colorDensityQuant = d3.scaleQuantize().domain([0,maxDensity])
+          .range([colorDensity(0),colorDensity(maxDensity/7),colorDensity((2/7)*maxDensity),colorDensity((3/7)*maxDensity)
+            ,colorDensity((4/7)*maxDensity),colorDensity((5/7)*maxDensity),colorDensity((6/7)*maxDensity),colorDensity(maxDensity)]);
+
+        //LEGEND FOR BINS DENSITY
+        d3.simpleLegend = () => {
+          function legendDens(legendD) {
+            let dat = [1,2,3,4,5,6,7];
+            legendD.selectAll("rect").data(dat).enter()
+              .append("rect").attr("height",25).attr("width",25)
+              .attr("x",0).attr("y", d => d*25)
+              .style("fill",d=> ""+colorDensityQuant(((7-d)/7)*(maxDensity)));
+            legendD.selectAll("text").data(dat).enter()
+              .append("text").attr("x",30).attr("y", d => 17.5+d*25)
+              .text(d => ""+(maxDensity-(d)*7)+"-"+(maxDensity-(d-1)*7))
+              .attr('class', 'colorkey');
+            return this;
+          }
+          return legendDens;
+        }
+        let densityLegend = d3.simpleLegend();
+        let legendD = densvg.append("g").attr("transform","translate(20,40)").call(densityLegend)
+        legendD.append("text").attr("x", 0).attr("y", 20).text("Number of bins per district").attr("class","title-key");
+        // ENDS HERE
+
+
         d3.json("https://data.cityofnewyork.us/api/views/gaq9-z3hz/rows.json?accessType=DOWNLOAD")
           .then(function(data){
             //Borough = 8 (apply the replace(/[ ]/g,"") to the result) District = 9, year = 11, month = 12, waste diversion = 13, capture rate paper = 14
@@ -151,9 +235,12 @@
             retentionData = data.data;
             retentionData.forEach(function(dat){
               //d3.select("path#"+dat[9]).style("fill-opacity",""+retenionScale(dat[13]));
-              d3.select("path#"+dat[9]).style("fill",""+colorGreen(dat[13]));
+              d3.select("path#"+dat[9]).style("fill",""+colorQuant(dat[13]));
+              d3.select("path#dens"+dat[9]).style("fill",""+colorDensityQuant(districtDensity[dat[9]]));
             })
         });
+        console.log(maxDensity);
+
       
 </script>
 
@@ -274,7 +361,7 @@ d3.csv('diversion_rates.csv').then( function(data){
             .attr('text-anchor', 'middle')
             .attr('color', 'black')
             .style('font-size', '8px')
-            .text('Diversion Rate (Total Recycling / Total Waste)')
+            .text('Diversion Rate (Recycling/Waste) %')
             .attr('transform', 'rotate(270)'); 
         
         //creates a light-grey line for each district diversion rate over time
@@ -389,7 +476,7 @@ d3.csv('diversion_rates.csv').then( function(data){
             .attr('text-anchor', 'middle')
             .attr('color', 'black')
             .style('font-size', '13px')
-            .text('Diversion Rate (Total Recycling / Total Waste)')
+            .text('Diversion Rate (Recycling/Waste) %')
             .attr('transform', 'rotate(270)'); 
  
     //iterate through data_obj_avg for the average over time by Zone

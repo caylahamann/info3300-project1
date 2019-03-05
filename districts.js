@@ -1,3 +1,5 @@
+/* Taken from https://data.cityofnewyork.us/City-Government/Community-Districts/yfnk-k7r4*/
+
 var districts_json = {
     "type": "FeatureCollection",
     "features": [
