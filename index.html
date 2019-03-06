@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Info 3300 Project 1 - Recycling Retention Rates in NYC</title>
+    <title>Info 3300 Project 1 - Recycling Diversion Rates in NYC</title>
 
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/styles/default.min.css">
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/highlight.min.js"></script>
@@ -71,6 +71,7 @@
 
 <body>
     <h1>Info 3300 Project 1 - Recycling Diversion Rates in NYC</h1>
+    <p>Here we visualize trends of recycling diversion rates in NYC, which is defined as the percentage of waste that is recycled over the total waste. The black dots on the first map represent the presence of public recycling bins in New York City. We aim to show trends between the presence of public recycling bins and diversion rates, as well as general trends of recycling diversion rates by zone.</p>
 
 </body>
 
@@ -156,7 +157,7 @@ var width = 600,
         }
         let chloroLegend = d3.simpleLegend();
         let legend = svg.append("g").attr("transform","translate(20,40)").call(chloroLegend)
-        legend.append("text").attr("x", 0).attr("y", 20).text("Diversion rate %").attr("class","title-key");
+        legend.append("text").attr("x", 0).attr("y", 20).text("Diversion rate (Recycling / Total Waste) %").attr("class","title-key");
         // ENDS HERE
 
 
@@ -201,7 +202,7 @@ var width = 600,
           }
         });
         // console.log(districtDensity);
-        let colorDensity = d3.scaleSequential(d3.interpolatePurples).domain([0,maxDensity]);
+        let colorDensity = d3.scaleSequential(d3.interpolateBuPu).domain([0,maxDensity]);
         let colorDensityQuant = d3.scaleQuantize().domain([0,maxDensity])
           .range([colorDensity(0),colorDensity(maxDensity/7),colorDensity((2/7)*maxDensity),colorDensity((3/7)*maxDensity)
             ,colorDensity((4/7)*maxDensity),colorDensity((5/7)*maxDensity),colorDensity((6/7)*maxDensity),colorDensity(maxDensity)]);
@@ -224,7 +225,7 @@ var width = 600,
         }
         let densityLegend = d3.simpleLegend();
         let legendD = densvg.append("g").attr("transform","translate(20,40)").call(densityLegend)
-        legendD.append("text").attr("x", 0).attr("y", 20).text("Number of bins per district").attr("class","title-key");
+        legendD.append("text").attr("x", 0).attr("y", 20).text("Number of public recycling bins per district").attr("class","title-key");
         // ENDS HERE
 
 
@@ -241,12 +242,17 @@ var width = 600,
         });
         console.log(maxDensity);
 
+
+
+
       
 </script>
 
 <script>
 
-d3.select('body').append('div'); 
+const description = 'Line graphs of diversion rate over time for each respective zone in NYC. The colored line in each graph represents the average of all the districts, which can also be seen in the final graph as a comparison of all averages for each zone. Trends generally show no growth in recycling rates over the past 15 years, but show stratification across zones by district.'
+
+d3.select('body').append('div').append('p').html(description); 
 
 d3.csv('diversion_rates.csv').then( function(data){
 
@@ -581,8 +587,17 @@ function arrAvg(arr) {
 
 </script>
 <style>
+h1, p {
+    padding-left: 20px;
+}
+
 h1 {
-    padding-left: 50px;
+  margin-bottom: -40px;
+}
+
+p {
+  padding-top: 40px;
+  width: 60%; 
 }
 
 .line {
@@ -604,6 +619,10 @@ h1 {
 
 .title-key {
     font-weight: bold; 
+}
+
+body {
+  padding-bottom: 50px;
 }
 </style>
 </html>
